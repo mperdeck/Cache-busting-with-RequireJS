@@ -1,0 +1,94 @@
+
+  <div class="text"><ul>
+<li><a href="/myfiles/RequireJSCacheBustingThroughVersioning/RequireJSAndVersioningDownload.zip">Download sample code</a></li>
+</ul>
+<p>Shows how to improve your ASP.NET MVC web site's performance through <a href="http://developer.yahoo.com/performance/rules.html#expires">far future client side caching</a> of RequireJS modules, while still forcing the browser to refresh its cache the moment you introduce a new version of your modules.</p>
+<h2>Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#cachebusting">Cache Busting 101</a></li>
+<li><a href="#cachebustingrequirejs">Cache Busting with RequireJS</a></li>
+<li><a href="#assemblyversion">Using the assembly version</a></li>
+<li><a href="#htmlhelper">Putting it together with an Html Helper</a></li>
+</ul>
+<p><a name="introduction"></a></p>
+<h2>Introduction</h2>
+<p><a href="http://requirejs.org/">RequireJS</a> generates script tags to load modules. To increase web site performance, you want to configure IIS to send response headers that tell the browser to cache those modules for up to a year - the maximum according to the HTTP standard (<a href="http://developer.yahoo.com/performance/rules.html#expires">why</a>; <a href="http://www.iis.net/ConfigReference/system.webServer/staticContent/clientCache">how</a>).</p>
+<p>However, when you update one or more modules, you don't want your users to keep using the old versions for up to a year. You want them to update their caches right away.</p>
+<p>In this article we'll see how to do cache busting based on the version of the assembly running your web site code. The download contains a working example.</p>
+<p><a name="cachebusting"></a></p>
+<h2>Cache Busting 101</h2>
+<p>It is very easy to get a browser to refresh its cache. Take this script tag:</p>
+<pre>&lt;script src="/Scripts/main.js" type="text/javascript"&gt;&lt;/script&gt;
+</pre>
+<p>All you need to do is add some sort of version in a query string:</p>
+<pre>&lt;script src="/Scripts/main.js?v=1.0.0.0" type="text/javascript"&gt;&lt;/script&gt;
+</pre>
+<p>Then when you update the version:</p>
+<pre>&lt;script src="/Scripts/main.js?v=1.1.0.0" type="text/javascript"&gt;&lt;/script&gt;
+</pre>
+<p>The browser will look for <em>main.js?v=1.1.0.0</em> in its cache, won't find it, and request it from the server.</p>
+<p>Cache busting this way has pros and cons:</p>
+<ul>
+<li><strong>Advantage</strong> - Very simple. Because you're using a query string, there is no need to change the name of main.js on the server.</li>
+<li><strong>Disadvantage</strong> - Loss of caching performance. When you introduce the query string, <a href="https://developers.google.com/speed/docs/best-practices/caching#LeverageProxyCaching">proxies</a> and the <a href="http://learn.iis.net/page.aspx/154/walkthrough-iis-output-caching/#05">IIS kernel cache</a> no longer cache your file.</li>
+</ul>
+<p>The optimal cache busting method involves changing the file name itself, such as <em>main.1.1.0.0.js</em> instead of <em>main.js?v=1.1.0.0</em>. There are several packages that will do this for you on the fly (<a href="http://aspnetperformance.com/post/Package-that-speeds-up-loading-of-JavaScript-CSS-and-image-files.aspx">example</a>), but they don't integrate with RequireJS. So we'll stick with query strings in the rest of this article.</p>
+<p><a name="cachebustingrequirejs"></a></p>
+<h2>Cache Busting with RequireJS</h2>
+<p>RequireJS lets you add a query string to all script tags it generates with the <em>urlTags</em> configuration option:</p>
+<pre><span style="color: red;">&lt;script type="text/javascript"&gt; var require = { urlArgs: "v=1.0.0.0" }; &lt;/script&gt;</span>
+&lt;script data-main="Scripts/main" 
+        src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.2/require.min.js" 
+        type="text/javascript"&gt;&lt;/script&gt;
+</pre>
+<p>If you run the sample site in the download in Chrome and inspect the DOM (right click anywhere on the page | Inspect element), you'll find that RequireJS has generated this:</p>
+<p><img src="/myfiles/RequireJSCacheBustingThroughVersioning/chromeInspectElement.png" alt="" /></p>
+<p><a name="assemblyversion"></a></p>
+<h2>Using the assembly version</h2>
+<p>So far so good. However, you don't want to change your HTML manually each time you do a new release - too clumsy and error prone.</p>
+<p>It's much more attractive to use the assembly version of your site:</p>
+<ul>
+<li>Easy to update manually - right click your web site project | Properties | Assembly Information.</li>
+<li>Can be updated automatically by TFS Build (<a href="http://blogs.msdn.com/b/jimlamb/archive/2010/02/12/how-to-create-a-custom-workflow-activity-for-tfs-build-2010.aspx">how</a>, <a href="http://www.ewaldhofman.nl/post/2010/05/13/Customize-Team-Build-2010-e28093-Part-5-Increase-AssemblyVersion.aspx#id_02e7b082-ce95-49a9-92e9-7dc88887b377">how</a>, <a href="http://www.richard-banks.org/2010/07/how-to-versioning-builds-with-tfs-2010.html">how</a>).</li>
+</ul>
+<p>You can get the assembly version via the currently executing assembly:</p>
+<pre>string version = 
+    System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+</pre>
+<p>However, this won't work if your site is hosted on a shared hosting company that uses <a href="http://stackoverflow.com/questions/2617454/what-is-medium-trust-in-asp-net">Medium Trust</a>, such as GoDaddy, because the call to GetExecutingAssembly is not allowed for security reasons in such an environment.</p>
+<p><a name="htmlhelper"></a></p>
+<h2>Putting it together with an Html Helper</h2>
+<p>Lets first create an Html Helper that returns the assembly version:</p>
+<pre>namespace RequireJSAndVersioning.Helpers
+{
+    public static class AssemblyVersionHelper
+    {
+        public static string AssemblyVersion(this HtmlHelper helper)
+        {
+            return System.Reflection.Assembly.GetExecutingAssembly()
+                         .GetName().Version.ToString();
+        }
+    }
+}
+</pre>
+<p>Now import your helper's namespace in your razor file:</p>
+<pre>@using RequireJSAndVersioning.Helpers
+</pre>
+<p>Finally, use the helper with the RequireJS configuration section:</p>
+<pre>&lt;script type="text/javascript"&gt;
+    var require = {
+        urlArgs: "v=<span style="color: red;">@Html.AssemblyVersion()</span>"
+    };
+&lt;/script&gt;
+&lt;script data-main="Scripts/main" 
+        src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.2/require.min.js" 
+        type="text/javascript"&gt;&lt;/script&gt;
+</pre>
+<p>As a result of all this, whenever the assembly version of your site changes, all your visitors' browsers will request the latest versions of your modules from your server.</p></div>
+  <div class="bottom">
+    
+    <p class="tags">Tags: <a href="/?tag=/RequireJS+cache+mvc+assembly+version" rel="tag">RequireJS cache mvc assembly version</a></p>
+    <p class="categories"><a href="/category/JavaScript.aspx">JavaScript</a></p>
+  </div>
+
