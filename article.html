@@ -1,6 +1,6 @@
 
-  <div class="text"><ul>
-<li><a href="/myfiles/RequireJSCacheBustingThroughVersioning/RequireJSAndVersioningDownload.zip">Download sample code</a></li>
+ <ul>
+<li><a href="https://github.com/mperdeck/Cache-busting-with-RequireJS">Download sample code</a></li>
 </ul>
 <p>Shows how to improve your ASP.NET MVC web site's performance through <a href="http://developer.yahoo.com/performance/rules.html#expires">far future client side caching</a> of RequireJS modules, while still forcing the browser to refresh its cache the moment you introduce a new version of your modules.</p>
 <h2>Contents</h2>
@@ -43,7 +43,7 @@
         type="text/javascript"&gt;&lt;/script&gt;
 </pre>
 <p>If you run the sample site in the download in Chrome and inspect the DOM (right click anywhere on the page | Inspect element), you'll find that RequireJS has generated this:</p>
-<p><img src="/myfiles/RequireJSCacheBustingThroughVersioning/chromeInspectElement.png" alt="" /></p>
+<p><img src="chromeInspectElement.png" alt="" /></p>
 <p><a name="assemblyversion"></a></p>
 <h2>Using the assembly version</h2>
 <p>So far so good. However, you don't want to change your HTML manually each time you do a new release - too clumsy and error prone.</p>
@@ -85,10 +85,6 @@
         src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.2/require.min.js" 
         type="text/javascript"&gt;&lt;/script&gt;
 </pre>
-<p>As a result of all this, whenever the assembly version of your site changes, all your visitors' browsers will request the latest versions of your modules from your server.</p></div>
-  <div class="bottom">
-    
-    <p class="tags">Tags: <a href="/?tag=/RequireJS+cache+mvc+assembly+version" rel="tag">RequireJS cache mvc assembly version</a></p>
-    <p class="categories"><a href="/category/JavaScript.aspx">JavaScript</a></p>
-  </div>
+<p>As a result of all this, whenever the assembly version of your site changes, all your visitors' browsers will request the latest versions of your modules from your server.</p>
+
 

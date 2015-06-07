@@ -1,0 +1,6 @@
+
+Cache busting for RequireJS / MVC projects
+
+Shows how to improve your ASP.NET MVC web site's performance through far future client side caching of RequireJS modules, while still forcing the browser to refresh its cache the moment you introduce a new version of your modules.
+
+
